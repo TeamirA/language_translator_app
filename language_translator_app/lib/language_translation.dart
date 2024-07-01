@@ -13,8 +13,8 @@ class LanguageTranslationPage extends StatefulWidget {
 
 class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
   var languages = [
-    'Amharic'
-        'Arabic',
+    'Amharic',
+    'Arabic',
     'Basque',
     'Bengali',
     'Bulgarian',
@@ -79,6 +79,7 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
     GoogleTranslator translator = GoogleTranslator();
     try {
       var translation = await translator.translate(input, from: src, to: dest);
+      //auto detect language and translate if source language is not selected
       setState(() {
         output = translation.text.toString();
       });
@@ -86,9 +87,8 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
       //show error message in snackbar
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Error translating text. Please try again.'),
-        duration: Duration(seconds: 5),
+        duration: Duration(seconds: 3),
       ));
-      throw Exception('Failed to translate the text: $e');
     }
   }
 
@@ -239,8 +239,9 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   DropdownButton(
+                    alignment: Alignment.center,
                     focusColor: Colors.deepPurpleAccent,
-                    iconDisabledColor: Colors.white,
+                    iconDisabledColor: const Color.fromARGB(255, 82, 80, 80),
                     iconEnabledColor: Colors.white,
                     hint: Text(
                       originLanguage,
@@ -250,8 +251,8 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
                     icon: const Icon(Icons.keyboard_arrow_down),
                     items: languages.map((String dropDownStringItem) {
                       return DropdownMenuItem(
-                        child: Text(dropDownStringItem),
                         value: dropDownStringItem,
+                        child: Text(dropDownStringItem),
                       );
                     }).toList(),
                     onChanged: (String? value) {
@@ -261,19 +262,20 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
                     },
                   ),
                   const SizedBox(
-                    width: 40,
+                    width: 20,
                   ),
                   const Icon(
                     Icons.arrow_right_alt_outlined,
-                    color: Colors.white,
-                    size: 40,
+                    color: Colors.black87,
+                    size: 30,
                   ),
                   const SizedBox(
-                    width: 40,
+                    width: 20,
                   ),
                   DropdownButton(
+                    alignment: Alignment.center,
                     focusColor: Colors.deepPurpleAccent,
-                    iconDisabledColor: Colors.white,
+                    iconDisabledColor: const Color.fromARGB(255, 82, 80, 80),
                     iconEnabledColor: Colors.white,
                     hint: Text(
                       destinationLanguage,
@@ -301,6 +303,8 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
               Padding(
                   padding: const EdgeInsets.all(8),
                   child: TextFormField(
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLines: null,
                     cursorColor: Colors.white,
                     autofocus: false,
                     style: const TextStyle(color: Colors.white),
@@ -322,7 +326,7 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
                     controller: languageController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter some text to translat e';
+                        return 'Please enter some text to translate';
                       }
                       return null;
                     },
@@ -337,10 +341,22 @@ class _LanguageTranslationPageState extends State<LanguageTranslationPage> {
                     textStyle: const TextStyle(fontSize: 20),
                   ),
                   onPressed: () {
-                    translateText(
-                        getLanguageCode(originLanguage),
-                        getLanguageCode(destinationLanguage),
-                        languageController.text.toString());
+                    if (languageController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please enter some text to translate'),
+                        duration: Duration(seconds: 3),
+                      ));
+                      return;
+                    }
+                    if (originLanguage == 'From'){
+                      //autodetect language if source language is not selected
+                      translateText('auto', getLanguageCode(destinationLanguage),
+                          languageController.text.toString());
+                    }else {
+                      translateText(
+                          getLanguageCode(originLanguage),
+                          getLanguageCode(destinationLanguage),
+                          languageController.text.toString());}
                   },
                   child: const Text(
                     'Translate',
